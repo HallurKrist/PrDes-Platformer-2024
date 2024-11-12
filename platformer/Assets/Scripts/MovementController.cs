@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 
 public class MovementController : MonoBehaviour
@@ -13,8 +14,30 @@ public class MovementController : MonoBehaviour
     public bool grounded = false;
     public Rigidbody2D playerBody;
 
+    public InputActionAsset playerControls;
+    private InputAction move;
+    private InputAction jump;
+
     // Initialize the inventory dictionary
     public Dictionary<string, int> pickedFruits = new Dictionary<string, int>();
+
+    private void Awake()
+    {
+        move = playerControls.FindAction("move");
+        jump = playerControls.FindAction("jump");
+    }
+
+    private void OnEnable()
+    {
+        move.Enable();
+        jump.Enable();
+    }
+
+    private void OnDisable()
+    {
+        move.Disable();
+        jump.Disable();
+    }
 
     void Start()
     {
@@ -26,30 +49,11 @@ public class MovementController : MonoBehaviour
     {
         Vector3 pos = transform.position;
         float distance = 5 * Time.deltaTime;
-        
-        // movement along the x axis
-        if (Input.GetKey(KeyCode.D) && pos.x < halfWidth)
-        {
-            pos.x += distance;
-        }
-        if (Input.GetKey(KeyCode.A) && pos.x > -halfWidth)
-        {
-            pos.x -= distance;
-        }
-        
-        // movement along the y axis 
-        /*if (Input.GetKey(KeyCode.W) && pos.y < halfHeight)
-        {
-            pos.y += distance;
-        }
-        if (Input.GetKey(KeyCode.S) && pos.y > -halfHeight)
-        {
-            pos.y -= distance;
-        }*/
-        
+        float direction = move.ReadValue<float>();
+        pos.x += direction * distance;
         transform.position = pos;
 
-        if (Input.GetKeyDown(KeyCode.Space) && grounded)
+        if (jump.WasPressedThisFrame() && grounded)
         {
             grounded = !grounded;
             playerBody.velocity = new Vector2(playerBody.velocity.x, jumpForce);
